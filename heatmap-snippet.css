@@ -1,0 +1,241 @@
+/* ============================================================================
+   heatmap-github.css
+   GitHub-style skin for the Heatmap Calendar plugin
+   https://github.com/Richardsl/heatmap-calendar-obsidian   (v0.7.x DOM)
+
+   Install: <vault>/.obsidian/snippets/heatmap-github.css
+            Settings → Appearance → CSS snippets → enable
+
+   Overridable knobs (set on body in another snippet, or per note with
+   this.container.style.setProperty('--heatmap-month-gap', '0px') before
+   calling renderHeatmapCalendar):
+     --heatmap-cell-min / --heatmap-cell-max      cell size range (9px / 15px)
+     --heatmap-gap                                gap between cells (3px)
+     --heatmap-month-gap                          extra space at each month boundary (6px; 0 = continuous grid)
+     --heatmap-radius                             cell corner radius (2px)
+     --heatmap-bg / -border / -fg / -empty / -today   card colours
+     --heatmap-font / --heatmap-font-size         label typography
+   ============================================================================ */
+
+/* 1. Card container ------------------------------------------------------- */
+div.heatmap-calendar-graph {
+  --hm-cell-min: var(--heatmap-cell-min, 9px);
+  --hm-cell-max: var(--heatmap-cell-max, 15px);
+  --hm-gap: var(--heatmap-gap, 3px);
+  --hm-month-gap: var(--heatmap-month-gap, 6px);
+  --hm-radius: var(--heatmap-radius, 2px);
+  --hm-label-col: var(--heatmap-label-col, 30px);
+  --hm-col-gap: var(--heatmap-col-gap, 8px);
+  --hm-label-h: var(--heatmap-label-h, 14px);
+  --hm-header-gap: var(--heatmap-header-gap, 6px);
+  --hm-font-size: var(--heatmap-font-size, 10px);
+  --hm-content-size: var(--heatmap-content-size, 8px);
+  --hm-font: var(--heatmap-font, var(--font-monospace, ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace));
+  --hm-bg: var(--heatmap-bg, #1b1b1b);
+  --hm-border: var(--heatmap-border, #3d3d3d);
+  --hm-fg: var(--heatmap-fg, #d4d4d4);
+  --hm-empty: var(--heatmap-empty, #3a3a3a);
+  --hm-today: var(--heatmap-today, #f0f0f0);
+  --hm-card-radius: var(--heatmap-card-radius, 12px);
+
+  position: relative !important;            /* containing block for the weekday column */
+  box-sizing: border-box !important;
+  display: grid !important;
+  grid-template-columns: var(--hm-label-col) minmax(0, 1fr) !important;
+  grid-template-rows: var(--hm-label-h) auto !important;
+  grid-template-areas: "year months" "days boxes" !important;
+  column-gap: var(--hm-col-gap) !important;
+  row-gap: var(--hm-header-gap) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0.5em 0 !important;
+  padding: 14px 16px 16px !important;
+  background: var(--hm-bg) !important;
+  border: 1px solid var(--hm-border) !important;
+  border-radius: var(--hm-card-radius) !important;
+  color: var(--hm-fg) !important;
+  font-family: var(--hm-font) !important;
+  font-size: var(--hm-font-size) !important;
+  line-height: 1 !important;
+  overflow-x: auto !important;              /* pane narrower than --hm-cell-min allows → scroll, never squash */
+  overflow-y: hidden !important;
+}
+
+/* 2. Neutralise theme list styling ---------------------------------------- */
+div.heatmap-calendar-graph ul,
+div.heatmap-calendar-graph li {
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  list-style: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  text-indent: 0 !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  font-family: inherit !important;
+}
+div.heatmap-calendar-graph li {
+  display: block !important;
+  position: static !important;              /* month labels anchor to the grid, not to the cell */
+  transform: none !important;
+}
+div.heatmap-calendar-graph li::marker { content: none !important; }
+div.heatmap-calendar-graph li::before,
+div.heatmap-calendar-graph li::after { content: none !important; }
+
+/* 3. Header: 4-digit year; plugin's 12-equal-column month row is replaced --- */
+div.heatmap-calendar-graph .heatmap-calendar-year {
+  grid-area: year !important;
+  align-self: end !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: var(--hm-label-h) !important;
+  line-height: var(--hm-label-h) !important;
+  font-size: var(--hm-font-size) !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+div.heatmap-calendar-graph .heatmap-calendar-year::before { content: "20"; }   /* plugin prints "26" */
+div.heatmap-calendar-graph .heatmap-calendar-months { display: none !important; }
+
+/* 4. Weekday column: fills its grid area exactly, so rows always line up --- */
+div.heatmap-calendar-graph .heatmap-calendar-days {
+  grid-area: days !important;
+  position: absolute !important;
+  inset: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: repeat(7, minmax(0, 1fr)) !important;
+  row-gap: var(--hm-gap) !important;
+  column-gap: 0 !important;
+  overflow: hidden !important;
+}
+div.heatmap-calendar-graph .heatmap-calendar-days li {
+  visibility: visible !important;           /* plugin hides every other row */
+  display: flex !important;
+  align-items: center !important;
+  height: auto !important;
+  overflow: hidden !important;
+  font-size: var(--hm-font-size) !important;
+  line-height: 1 !important;
+  color: var(--hm-fg) !important;
+}
+
+/* 5. The grid: 53 fluid columns, square cells, fixed gap ------------------ */
+div.heatmap-calendar-graph .heatmap-calendar-boxes {
+  grid-area: boxes !important;
+  position: relative !important;
+  display: grid !important;
+  grid-auto-flow: column !important;
+  grid-template-columns: repeat(53, minmax(0, 1fr)) !important;
+  grid-auto-columns: minmax(0, 1fr) !important;
+  grid-template-rows: repeat(7, auto) !important;
+  gap: var(--hm-gap) !important;
+  justify-self: start !important;
+  align-self: start !important;
+  width: calc(100% - 11 * var(--hm-month-gap)) !important;   /* room for the 11 month offsets */
+  min-width: calc(53 * var(--hm-cell-min) + 52 * var(--hm-gap)) !important;
+  max-width: calc(53 * var(--hm-cell-max) + 52 * var(--hm-gap)) !important;
+}
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: var(--hm-radius) !important;
+  background-color: var(--hm-empty);        /* .hasData keeps its inline colour; pre-year pads are inline transparent */
+  box-shadow: none;
+  font-size: var(--hm-content-size) !important;
+  line-height: 1 !important;
+  text-align: left !important;
+  overflow: visible !important;
+}
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.isEmpty { background-color: var(--hm-empty) !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.today   { box-shadow: inset 0 0 0 1px var(--hm-today) !important; }
+
+/* entry.content (emoji, text, hover-preview link) centred in the cell */
+div.heatmap-calendar-graph .heatmap-calendar-content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+div.heatmap-calendar-graph .heatmap-calendar-boxes .internal-link {
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  text-decoration: none !important;
+}
+
+/* 6. Month boundaries: each month shifts right by one more --hm-month-gap --- */
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-feb { margin-inline-start: calc( 1 * var(--hm-month-gap)) !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-mar { margin-inline-start: calc( 2 * var(--hm-month-gap)) !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-apr { margin-inline-start: calc( 3 * var(--hm-month-gap)) !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-may { margin-inline-start: calc( 4 * var(--hm-month-gap)) !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-jun { margin-inline-start: calc( 5 * var(--hm-month-gap)) !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-jul { margin-inline-start: calc( 6 * var(--hm-month-gap)) !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-aug { margin-inline-start: calc( 7 * var(--hm-month-gap)) !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-sep { margin-inline-start: calc( 8 * var(--hm-month-gap)) !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-oct { margin-inline-start: calc( 9 * var(--hm-month-gap)) !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-nov { margin-inline-start: calc(10 * var(--hm-month-gap)) !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-dec { margin-inline-start: calc(11 * var(--hm-month-gap)) !important; }
+
+/* 7. Month labels, placed above the real first week of each month ----------
+      "A + B" = the first cell of month B is the one directly after a cell of
+      month A. left is left auto, so the label takes the cell's own x. */
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-jan:first-child::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li:not(.month-jan) + li.month-jan::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-jan + li.month-feb::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-feb + li.month-mar::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-mar + li.month-apr::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-apr + li.month-may::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-may + li.month-jun::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-jun + li.month-jul::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-jul + li.month-aug::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-aug + li.month-sep::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-sep + li.month-oct::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-oct + li.month-nov::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-nov + li.month-dec::before {
+  position: absolute;
+  display: block;
+  top: calc(-1 * (var(--hm-label-h) + var(--hm-header-gap)));
+  height: var(--hm-label-h);
+  line-height: var(--hm-label-h);
+  font-size: var(--hm-font-size);
+  font-weight: 400;
+  color: var(--hm-fg);
+  white-space: nowrap;
+  pointer-events: none;
+}
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-jan:first-child::before,
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li:not(.month-jan) + li.month-jan::before { content: "Jan" !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-jan + li.month-feb::before { content: "Feb" !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-feb + li.month-mar::before { content: "Mar" !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-mar + li.month-apr::before { content: "Apr" !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-apr + li.month-may::before { content: "May" !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-may + li.month-jun::before { content: "Jun" !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-jun + li.month-jul::before { content: "Jul" !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-jul + li.month-aug::before { content: "Aug" !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-aug + li.month-sep::before { content: "Sep" !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-sep + li.month-oct::before { content: "Oct" !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-oct + li.month-nov::before { content: "Nov" !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.month-nov + li.month-dec::before { content: "Dec" !important; }
+
+/* 8. Optional: re-map the plugin's default 5-step greens to dark-mode greens -
+      Data cells get their colour as an inline style from the DataviewJS block,
+      so CSS can only remap known hex values. Delete this block if you pass your
+      own `colors` to renderHeatmapCalendar. */
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.hasData[style*="#c6e48b"] { background-color: #0e4429 !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.hasData[style*="#7bc96f"] { background-color: #006d32 !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.hasData[style*="#49af5d"] { background-color: #26a641 !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.hasData[style*="#2e8840"] { background-color: #39d353 !important; }
+div.heatmap-calendar-graph .heatmap-calendar-boxes > li.hasData[style*="#196127"] { background-color: #7ee787 !important; }

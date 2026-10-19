@@ -5,7 +5,6 @@ A CSS snippet that makes the [Heatmap Calendar](https://github.com/Richardsl/hea
 
 It also fixes the common breakage where a theme's `li` rules stretch the plugin's cells into tall bars and wrap the month names letter by letter. The snippet owns every geometry property, so the grid renders the same under any theme.
 
-> Add your screenshots here: `![Before](docs/before.png)` `![After](docs/after.png)`
 
 ## Features
 
